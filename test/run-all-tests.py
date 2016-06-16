@@ -2,7 +2,7 @@
 
 """
     Allow you smoothly surf on many websites blocking non-mainland visitors.
-    Copyright (C) 2012 - 2014  Bo Zhu  http://zhuzhu.org
+    Copyright (C) 2012 - 2016  Bo Zhu  http://zhuzhu.org
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -49,13 +49,36 @@ def start_server():
     sys.stdout.flush()
     test_env = os.environ.copy()
     test_env['PROXY_ADDR'] = 'https://secure.uku.im:993'
-    test_env['BAK_PROXY_ADDR'] = 'https://proxy.mainland.io:993'
-    test_env['PAC_PROXY_ADDR'] = 'http://proxy.uku.im:8888'
+    test_env['BAK_PROXY_ADDR'] = 'http://proxy.uku.im:443'
+    test_env['PAC_PROXY_ADDR'] = 'http://proxy.uku.im:443'
     server_process = subprocess.Popen(
         ['node', '../server/server.js'],
         env=test_env)
     time.sleep(3)
 
+def wait_server_open(server, port, timeout):
+    import socket
+    import errno
+    from time import time as now
+
+    # ending time for time out
+    end = now() + timeout
+
+    while True:
+        s = socket.socket()
+        try:
+            next_timeout = end - now() # check for timeout
+            if next_timeout < 0:
+                return False
+
+            s.connect((server, port))
+        except socket.error, err:
+            # if connection failed, try again
+            s.close()
+            continue
+        else:
+            s.close()
+            return True
 
 def stop_server():
     time.sleep(1)
@@ -129,7 +152,10 @@ def main():
     exit_code = -1
     try:
         start_server()
-        exit_code = run_all_tests()
+        if (wait_server_open('127.0.0.1', 8888, 20)): # time out in 20s
+            exit_code = run_all_tests()
+        else:
+            red_alert('Error open connection')
     finally:
         stop_server()
     sys.exit(exit_code)

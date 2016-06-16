@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 - 2014  Bo Zhu  http://zhuzhu.org
+ * Copyright (C) 2012 - 2016  Bo Zhu  http://zhuzhu.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -46,10 +46,10 @@ function http_redirector(details) {
     // }
 
     var backend_server;
-    if (typeof localStorage.custom_server === 'undefined') {
-        backend_server = unblock_youku.actual_server;
+    if (typeof localStorage.custom_redirect_server === 'undefined') {
+        backend_server = unblock_youku.actual_redirect_server;
     } else {
-        backend_server = localStorage.custom_server;
+        backend_server = localStorage.custom_redirect_server;
     }
 
     //var redirect_url = 'http://127.0.0.1.xip.io:8080/?url=' + urlsafe_b64encode(details.url);
@@ -105,7 +105,7 @@ function setup_redirect() {
         chrome.webRequest.onBeforeRequest.addListener(
             http_redirector,
             {
-                urls: unblock_youku.redirect_url_list
+                urls: unblock_youku.redirect_urls
             },
             ["blocking"]
         );
@@ -116,14 +116,14 @@ function setup_redirect() {
         ga_report_error('Unexpected Error', err_msg);
     }
 
-    unblock_youku.actual_server = unblock_youku.default_server;
-    check_redirect_server(unblock_youku.actual_server, function() {
-        console.log('default_server seems to be working fine: ' + unblock_youku.actual_server);
+    unblock_youku.actual_redirect_server = unblock_youku.default_redirect_server;
+    check_redirect_server(unblock_youku.actual_redirect_server, function() {
+        console.log('default_redirect_server seems to be working fine: ' + unblock_youku.actual_redirect_server);
     }, function(err_msg) {
-        unblock_youku.actual_server = unblock_youku.backup_server;
-        console.warn('default_server error: ' + err_msg);
-        console.warn('changed to backup_server: ' + unblock_youku.actual_server);
-        ga_report_error('Redirect Server Error', unblock_youku.default_server + ': ' + err_msg);
+        unblock_youku.actual_redirect_server = unblock_youku.backup_redirect_server;
+        console.warn('default_redirect_server error: ' + err_msg);
+        console.warn('changed to backup_redirect_server: ' + unblock_youku.actual_redirect_server);
+        ga_report_error('Redirect Server Error', unblock_youku.default_redirect_server + ': ' + err_msg);
     });
 }
 
@@ -140,30 +140,29 @@ function clear_redirect() {
 }
 
 
+// extra sites to redirect
+/*
+function extra_http_redirector(details) {
+    var redirect_url = 'http://117.27.241.117/' + details.url.replace(/^.*\/\/[^\/]+/, '');
+    console.log('redirect url: ' + redirect_url);
+    return {redirectUrl: redirect_url};
+}
 
-// // extra sites to redirect
-// function extra_http_redirector(details) {
-//     if (details.url === 'http://netcncoversea.inter.iqiyi.com/crossdomain.xml') {
-//         var redirect_url = 'http://pac.uku.im/crossdomain.xml';
-//         console.log('redirect url: ' + redirect_url);
-//         return {redirectUrl: redirect_url};
-//     }
-// }
-
-// function setup_extra_redirector() {
-//     if (!chrome.webRequest.onBeforeRequest.hasListener(extra_http_redirector)) {
-//         chrome.webRequest.onBeforeRequest.addListener(
-//             extra_http_redirector,
-//             {
-//                 urls: ['http://netcncoversea.inter.iqiyi.com/crossdomain.xml']
-//             },
-//             ["blocking"]
-//         );
-//         console.log('extra_http_redirector is set');
-//     } else {
-//         var err_msg = 'extra_http_redirector is already there!';
-//         console.error(err_msg);
-//         ga_report_error('Unexpected Error', err_msg);
-//     }
-// }
+function setup_extra_redirector() {
+    if (!chrome.webRequest.onBeforeRequest.hasListener(extra_http_redirector)) {
+        chrome.webRequest.onBeforeRequest.addListener(
+            extra_http_redirector,
+            {
+                urls: ['http://*.music.126.net/*']
+            },
+            ["blocking"]
+        );
+        console.log('extra_http_redirector is set');
+    } else {
+        var err_msg = 'extra_http_redirector is already there!';
+        console.error(err_msg);
+        ga_report_error('Unexpected Error', err_msg);
+    }
+}
+*/
 

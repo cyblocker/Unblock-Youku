@@ -15,28 +15,31 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*global chrome: false */
+/*global chrome: false, localStorage: false */
 "use strict";
 
-// have to use a callback function
-function get_storage(key, callback) {
-    chrome.storage.sync.get(key, function(items) {
-        if (typeof items !== 'undefined' && items.hasOwnProperty(key)) {
-            callback(items[key]);
-        } else {
-            callback();
-        }
+
+function create_donation_tab() {
+    if (typeof localStorage.showed_donation_page !== 'undefined') {
+        // Make sure the page is only shown once
+        return;
+    }
+
+    var donation_url = chrome.i18n.getMessage('donation_url');
+    chrome.tabs.create({
+        url: donation_url
     });
+
+    // Set the flag such that the page isn't shown again
+    localStorage.showed_donation_page = new Date().getTime();
 }
 
+chrome.runtime.onInstalled.addListener(function(details) {
+    if (details.reason === 'install') {
+        create_donation_tab();
+    }
+});
 
-function set_storage(key, value, callback) {
-    var obj = {};
-    obj[key] = value;  // can't just use {key: value}
-    chrome.storage.sync.set(obj, callback);
-}
-
-
-function remove_storage(key, callback) {
-    chrome.storage.sync.remove(key, callback);
-}
+document.addEventListener("DOMContentLoaded", function() {
+    create_donation_tab();
+});
